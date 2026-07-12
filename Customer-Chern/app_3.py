@@ -1,26 +1,3 @@
-"""
-Customer Churn Prediction Dashboard
-------------------------------------
-Three pages, selectable from the sidebar:
-  1. Dashboard                - high-level KPI overview
-  2. EDA & Business Insights   - charts recreated from the source notebook
-                                 (Plotly), built from the raw Telco.csv,
-                                 used ONLY for visualization
-  3. Prediction                - the ORIGINAL, UNCHANGED inference pipeline:
-                                 loads the already-trained models
-                                 (lr_model.pkl, rf_model.pkl, xgb.pkl), the
-                                 fitted scaler (scaler.pkl) and the
-                                 training-time feature column order
-                                 (feature_columns.pkl) produced by the
-                                 source notebook, and reproduces that
-                                 notebook's exact preprocessing steps on
-                                 new user input before calling
-                                 .predict() / .predict_proba().
-
-No training, tuning, or pipeline logic is defined here. The EDA page loads
-the raw dataset separately and only for charts/KPIs - it never touches the
-models, the scaler, or the prediction pipeline.
-"""
 
 import os
 
@@ -31,9 +8,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-# ----------------------------------------------------------------------
+
 # Page config
-# ----------------------------------------------------------------------
+
 st.set_page_config(
     page_title="Customer Churn Prediction",
     page_icon="📊",
@@ -41,9 +18,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ----------------------------------------------------------------------
+
 # Global styling (visual polish only - no logic here)
-# ----------------------------------------------------------------------
+
 st.markdown(
     """
     <style>
@@ -96,10 +73,10 @@ st.markdown(
 PLOTLY_TEMPLATE = "plotly_white"
 CHURN_COLORS = {"No": "#4F46E5", "Yes": "#DB2777"}
 
-# ----------------------------------------------------------------------
+
 # Constants that mirror the notebook exactly (PREDICTION PIPELINE - DO
 # NOT MODIFY)
-# ----------------------------------------------------------------------
+
 
 # Columns that were Label Encoded in the notebook (binary_cols).
 # sklearn's LabelEncoder sorts unique string values alphabetically and
@@ -180,11 +157,10 @@ METRICS = pd.DataFrame(
 )
 
 
-# ----------------------------------------------------------------------
 # Feature engineering helpers (copied 1:1 from the notebook's functions)
 # Used by BOTH the prediction pipeline and the EDA page, so the two stay
 # perfectly consistent with the notebook.
-# ----------------------------------------------------------------------
+
 def mc(x):
     """Reproduces the notebook's MonthlySpentCategory bucketing."""
     if x < 40:
@@ -211,10 +187,10 @@ def tenure_group(x):
         return "Loyal"
 
 
-# ----------------------------------------------------------------------
+
 # Cached loaders for the artifacts saved by the notebook (PREDICTION
 # PIPELINE - DO NOT MODIFY)
-# ----------------------------------------------------------------------
+
 @st.cache_resource
 def load_artifacts():
     lr_model = joblib.load("lr_model.pkl")
@@ -277,13 +253,12 @@ def predict(model_choice, raw_df, feature_columns, lr_model, rf_model, xgb_model
     return pred, proba, X_final
 
 
-# ----------------------------------------------------------------------
 # EDA data loader - COMPLETELY SEPARATE from the prediction pipeline.
 # Loads the raw Telco.csv and reproduces the notebook's cleaning /
 # feature-engineering steps ONLY for charts and KPIs. Nothing here
 # touches the models, the scaler, or feature_columns.pkl, and nothing
 # here is fit/trained.
-# ----------------------------------------------------------------------
+
 EDA_DATA_PATH = "Telco.csv"
 
 
@@ -337,9 +312,9 @@ def grouped_churn_bar(df, col, title, x_title, barmode="group", category_order=N
     return fig
 
 
-# ============================================================================
+
 # SIDEBAR NAVIGATION
-# ============================================================================
+
 st.sidebar.markdown("## 📊 Churn Dashboard")
 page = st.sidebar.radio(
     "Navigate",
@@ -348,9 +323,9 @@ page = st.sidebar.radio(
 )
 st.sidebar.markdown("---")
 
-# ============================================================================
+
 # PAGE: DASHBOARD
-# ============================================================================
+
 if page == "📊 Dashboard":
     st.markdown(
         """
@@ -430,9 +405,9 @@ if page == "📊 Dashboard":
             unsafe_allow_html=True,
         )
 
-# ============================================================================
+
 # PAGE: EDA & BUSINESS INSIGHTS
-# ============================================================================
+
 elif page == "📈 EDA & Business Insights":
     st.markdown(
         """
@@ -459,10 +434,10 @@ elif page == "📈 EDA & Business Insights":
     numeric_cols = sorted(df.select_dtypes(include=np.number).columns.tolist())
     all_cols = df.columns.tolist()
 
-    # ------------------------------------------------------------------
+  
     # Chart builder helper - purely for visualization, built dynamically
     # from whatever the user selects. Never touches the model pipeline.
-    # ------------------------------------------------------------------
+ 
     def build_dynamic_chart(data, graph_type, x_col, y_col, hue_col):
         color = None if hue_col in (None, "None") else hue_col
         y = None if y_col in (None, "None") else y_col
@@ -539,9 +514,9 @@ elif page == "📈 EDA & Business Insights":
         fig.update_layout(margin=dict(t=60, b=10, l=10, r=10), height=440)
         return fig
 
-    # ------------------------------------------------------------------
+   
     # 1) Filter the dataset
-    # ------------------------------------------------------------------
+   
     st.markdown('<div class="section-title">🔎 Filter the Dataset</div>', unsafe_allow_html=True)
     st.caption("Pick any categorical columns to filter by (e.g. Contract, Gender, InternetService, Churn), then choose the values to keep.")
 
@@ -578,9 +553,9 @@ elif page == "📈 EDA & Business Insights":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ------------------------------------------------------------------
+  
     # 2) KPIs (recomputed live from the filtered data)
-    # ------------------------------------------------------------------
+   
     st.markdown('<div class="section-title">📌 Key Metrics (Filtered)</div>', unsafe_allow_html=True)
     if filtered_df.empty:
         st.warning("No rows match the current filters - relax a filter above to see metrics and charts.")
@@ -593,9 +568,9 @@ elif page == "📈 EDA & Business Insights":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ------------------------------------------------------------------
+ 
     # 3) Interactive chart builder
-    # ------------------------------------------------------------------
+  
     st.markdown('<div class="section-title">🎛️ Chart Builder</div>', unsafe_allow_html=True)
     st.caption("Build any chart you like from the filtered data - pick a graph type, then the columns that feed it.")
 
@@ -701,9 +676,9 @@ elif page == "📈 EDA & Business Insights":
         unsafe_allow_html=True,
     )
 
-# ============================================================================
+
 # PAGE: PREDICTION  (UNCHANGED PIPELINE)
-# ============================================================================
+
 else:
     st.markdown(
         """
